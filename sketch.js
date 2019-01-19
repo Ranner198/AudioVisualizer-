@@ -1,71 +1,78 @@
+var mic, fft, song;
+
+var img = [];
+
+var last = [0];
+var totalDiff = 0;
+
+var timesHit = 0;
+
 function preload() {
-  song = loadSound('song.mp3', loaded);
+  song = loadSound('./Song.mp3');  
 }
-
-
-function loaded() {
-  song.setVolume(1);
-  song.play();
-}
-
-function PausePlay() {
-  if(!song.isPlaying()) {
-    song.setVolume(1);
-    song.play();
-    pause.html("pause");
-  } else {
-    song.pause();
-    pause.html("play");
-  }
-}
-
-var songSlider;
-var pause;
-var songLength = song.duration();
-
-
 
 function setup() {
 
-  createCanvas(1600, 800);
-  //createCanvas(width, height);
-  //background('black');
-  fft = new p5.FFT(0.9, 256);
+	img[0] = loadImage("01.png");
+	img[1] = loadImage("02.png");
+	img[2] = loadImage("03.png");
+	img[3] = loadImage("04.png");
 
+	createCanvas(343, 299);
+	noFill();
 
-  songSlider = createSlider(0, songLength, 0);
-  songSlider.position(width/4, 700);
-  songSlider.style('width', '800px');
-
-  pause = createButton('pause');
-  pause.position(0, height);
-  pause.mousePressed(PausePlay);
-
-  colorMode(HSB);
+  //Song Input  
+  song.play();
+  fft = new p5.FFT();
+  fft.setInput(song);
+/*
+  //Mic Input
+	mic = new p5.AudioIn();
+	mic.start();
+  fft = new p5.FFT();
+  fft.setInput(mic);
+*/
 }
-
-
-
 
 function draw() {
+    
+    //background(0);
 
-  background('black');
+    var spectrum = fft.analyze();
 
-  //var time = songSlider.value;
-  
-  text("time", songSlider.X * 2 + songSlider.width, 700)
-  fill(0);
+    totalDiff = 0;
 
-  songSlider.value(Math.floor(song.currentTime()));
+    beginShape();
+    for (i = 0; i < spectrum.length/4; i++) {
+     	//vertex(i, map(spectrum[i], 0, 255, height, 0) );
+     	//if ( i < spectrum.length/2)    	
+   		if (last[i] < spectrum[i])
+   			totalDiff++;
+   		else
+   			totalDiff--;
+   		//console.log(totalDiff);
+   		if (totalDiff > 0) {
+   			timesHit++;
 
-
-  var spectrum = fft.analyze();
-  noStroke();
-  fill(0,255,0); // spectrum is green
-  for (var i = 0; i< spectrum.length; i++){
-    fill(i, 255, 255)
-    var x = map(i, 0, spectrum.length, 0, width);
-    var h = -height + map(spectrum[i], 0, 255, height, 0);
-    rect(x * 1.5, height, width / spectrum.length, h * 0.9);
+   			if(timesHit % 2 == 0)
+   				image(img[2], 0, 0);
+   			else if (timesHit % 8 == 0)
+   				image(img[3], 0, 0);
+   			else
+   				image(img[1], 0, 0);
+   		}
+   		else
+   			image(img[0], 0, 0);
+     	last[i] = parseInt(spectrum[i]);
+    }
+    endShape();
+}
+/*
+function mousePressed() {
+  if (song.isPlaying()) { // .isPlaying() returns a boolean
+    song.stop();
+  } else {
+    song.play();
   }
 }
+*/
